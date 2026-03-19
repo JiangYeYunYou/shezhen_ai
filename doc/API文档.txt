@@ -32,7 +32,7 @@
 
 ### 1. 用户注册
 
-**接口地址**: `POST /auth/register`
+**接口地址**: `POST /api/auth/register`
 
 **接口描述**: 注册新用户账号
 
@@ -89,7 +89,7 @@
 
 ### 2. 用户登录
 
-**接口地址**: `POST /auth/login`
+**接口地址**: `POST /api/auth/login`
 
 **接口描述**: 用户登录获取JWT Token
 
@@ -205,7 +205,7 @@ Authorization: Bearer <access_token>
 
 ### 1. 中医问诊
 
-**接口地址**: `POST /chat/wenzhen`
+**接口地址**: `POST /api/chat/wenzhen`
 
 **接口描述**: 与AI中医助手进行问诊对话，支持流式返回
 
@@ -232,7 +232,7 @@ Authorization: Bearer <access_token>
 **前端调用示例**:
 
 ```javascript
-const response = await fetch('/chat/wenzhen', {
+const response = await fetch('/api/chat/wenzhen', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

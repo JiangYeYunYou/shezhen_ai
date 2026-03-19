@@ -3,3 +3,5 @@
     2. 系统根据问题调用ai模型，获取回答
     3. 系统将回答流式返回给用户
 模型的系统提示词文件: /prompts/system_prompt_wenzhen.txt
+模型baseurl: https://dashscope.aliyuncs.com/compatible-mode/v1
+模型名字：deepseek-v3.2

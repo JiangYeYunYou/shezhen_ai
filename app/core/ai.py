@@ -37,7 +37,7 @@ class AIService:
     async def chat_stream(
         self, 
         user_message: str, 
-        system_prompt_file: str = "system_prompt_wenzhen.txt",
+        system_prompt_file: str = "/prompts/system_prompt_wenzhen.txt",
         conversation_history: list[dict] = None
     ) -> AsyncGenerator[str, None]:
         system_prompt = self.get_system_prompt(system_prompt_file)
