@@ -12,12 +12,12 @@ class UserRegisterRequest(BaseModel):
         if not v:
             raise ValueError("用户名不能为空")
         
-        chinese_pattern = re.compile(r"^[\u4e00-\u9fa5]+$")
-        if not chinese_pattern.match(v):
-            raise ValueError("用户名只能包含中文字符")
+        pattern = re.compile(r"^[\u4e00-\u9fa5a-zA-Z]+$")
+        if not pattern.match(v):
+            raise ValueError("用户名只能包含中文字符或英文字符")
         
         if len(v) < 2 or len(v) > 7:
-            raise ValueError("用户名长度必须为2到7个中文字符")
+            raise ValueError("用户名长度必须为2到7个字符")
         
         return v
 

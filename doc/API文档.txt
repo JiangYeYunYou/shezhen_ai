@@ -1,0 +1,209 @@
+# 舌诊后端 API 文档
+
+## 基础信息
+
+- **Base URL**: `http://localhost:8000`
+- **Content-Type**: `application/json`
+- **统一响应格式**: JSON
+
+---
+
+## 统一响应格式
+
+所有API接口均使用统一的响应格式：
+
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {}
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| code | int | 状态码，200表示成功，其他表示失败 |
+| message | string | 响应消息 |
+| data | object | 响应数据，成功时返回具体数据，失败时为null |
+
+---
+
+## 认证模块
+
+### 1. 用户注册
+
+**接口地址**: `POST /auth/register`
+
+**接口描述**: 注册新用户账号
+
+**请求参数**:
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| username | string | 是 | 用户名，2-7个字符（中文或英文） |
+| password | string | 是 | 密码，8-21个字符 |
+
+**请求示例**:
+
+```json
+{
+    "username": "张三",
+    "password": "password123"
+}
+```
+
+**成功响应**:
+
+```json
+{
+    "code": 200,
+    "message": "注册成功",
+    "data": {
+        "id": 1,
+        "username": "张三"
+    }
+}
+```
+
+**失败响应**:
+
+```json
+{
+    "code": 400,
+    "message": "用户名已存在",
+    "data": null
+}
+```
+
+**参数校验错误**:
+
+| 错误信息 | 说明 |
+|----------|------|
+| 用户名不能为空 | username字段未填写 |
+| 用户名只能包含中文字符或英文字符 | username包含非法字符 |
+| 用户名长度必须为2到7个字符 | username长度不符合要求 |
+| 密码不能为空 | password字段未填写 |
+| 密码长度必须为8到21个字符 | password长度不符合要求 |
+
+---
+
+### 2. 用户登录
+
+**接口地址**: `POST /auth/login`
+
+**接口描述**: 用户登录获取JWT Token
+
+**请求参数**:
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| username | string | 是 | 用户名 |
+| password | string | 是 | 密码 |
+
+**请求示例**:
+
+```json
+{
+    "username": "张三",
+    "password": "password123"
+}
+```
+
+**成功响应**:
+
+```json
+{
+    "code": 200,
+    "message": "登录成功",
+    "data": {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "token_type": "bearer"
+    }
+}
+```
+
+**失败响应**:
+
+```json
+{
+    "code": 401,
+    "message": "用户名或密码错误",
+    "data": null
+}
+```
+
+---
+
+## JWT Token 说明
+
+### Token 格式
+
+登录成功后返回的 `access_token` 为 JWT 格式，包含以下信息：
+
+- **sub**: 用户名
+- **user_id**: 用户ID
+- **exp**: 过期时间（默认7天）
+
+### Token 使用方式
+
+在需要认证的接口中，在请求头中添加：
+
+```
+Authorization: Bearer <access_token>
+```
+
+### Token 有效期
+
+默认有效期为 7 天（10080 分钟），可在 `.env` 文件中通过 `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` 配置。
+
+---
+
+## 错误码说明
+
+| 错误码 | 说明 |
+|--------|------|
+| 200 | 成功 |
+| 400 | 请求参数错误 |
+| 401 | 认证失败 |
+| 403 | 权限不足 |
+| 404 | 资源不存在 |
+| 500 | 服务器内部错误 |
+
+---
+
+## 数据模型
+
+### User 用户表
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | int | 用户ID，主键，自增 |
+| username | string | 用户名，唯一，2-7个字符（中文或英文） |
+| password | string | 密码（加盐哈希存储） |
+| salt | string | 密码盐值 |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+---
+
+## 安全说明
+
+### 密码存储
+
+- 密码使用 **bcrypt** 算法进行哈希
+- 每个用户生成独立的随机盐值（64位十六进制）
+- 盐值与密码拼接后进行哈希存储
+
+### JWT 配置
+
+- 算法: HS256
+- 密钥: 生产环境请修改 `JWT_SECRET_KEY`
+
+---
+
+## 在线文档
+
+服务启动后可访问：
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
