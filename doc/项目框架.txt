@@ -1,0 +1,8 @@
+项目技术栈：
+    语言：python=13.3
+    框架：fastapi
+    环境管理：conda(已经安装，直接使用即可)，虚拟环境名：shezhen_ai
+    包管理工具：uv
+    版本管理工具：git
+    数据库：Mysql
+    
