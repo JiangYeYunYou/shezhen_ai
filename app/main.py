@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import setup_logging, get_logger
 from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 
 setup_logging(log_level=settings.LOG_LEVEL)
 logger = get_logger(__name__)
@@ -38,6 +39,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(chat_router)
 
 
 @app.middleware("http")

@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     
+    AI_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    AI_API_KEY: str = ""
+    AI_MODEL_NAME: str = "deepseek-v3.2"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
