@@ -225,9 +225,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**响应格式**: 流式文本（Server-Sent Events）
+**响应格式**: Server-Sent Events (SSE)
 
-响应为流式文本，前端需要逐块接收并显示。
+响应格式为 SSE 标准格式，每条消息格式为 `data: {内容}\n\n`，流结束时返回 `data: [DONE]\n\n`。
 
 **前端调用示例**:
 
@@ -243,12 +243,26 @@ const response = await fetch('/api/chat/wenzhen', {
 
 const reader = response.body.getReader();
 const decoder = new TextDecoder();
+let result = '';
 
 while (true) {
     const { done, value } = await reader.read();
     if (done) break;
+    
     const chunk = decoder.decode(value);
-    console.log(chunk); // 逐块显示AI回复
+    const lines = chunk.split('\n\n');
+    
+    for (const line of lines) {
+        if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+                console.log('Stream finished');
+                break;
+            }
+            result += data;
+            console.log(data); // 逐块显示AI回复
+        }
+    }
 }
 ```
 

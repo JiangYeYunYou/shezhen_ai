@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from app.services.chat import chat_service
@@ -19,17 +19,19 @@ async def wenzhen_chat(request: ChatRequest):
                 message=request.message,
                 conversation_history=request.conversation_history
             ):
-                yield chunk
+                yield f"data: {chunk}\n\n"
+            yield "data: [DONE]\n\n"
         except Exception as e:
             logger.error(f"Stream error: {e}", exc_info=True)
-            yield f"[错误] {str(e)}"
+            yield f"data: [ERROR] {str(e)}\n\n"
     
     return StreamingResponse(
         generate(),
-        media_type="text/plain; charset=utf-8",
+        media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
         }
     )
