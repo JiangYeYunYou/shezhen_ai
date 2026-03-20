@@ -214,14 +214,12 @@ Authorization: Bearer <access_token>
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
 | message | string | 是 | 用户问题，不超过2000字符 |
-| conversation_history | array | 否 | 对话历史，格式为 `[{"role": "user/assistant", "content": "..."}]` |
 
 **请求示例**:
 
 ```json
 {
-    "message": "最近总是感觉疲劳，睡眠也不好",
-    "conversation_history": []
+    "message": "最近总是感觉疲劳，睡眠也不好"
 }
 ```
 
@@ -236,8 +234,7 @@ const response = await fetch('/api/chat/wenzhen', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        message: '最近总是感觉疲劳，睡眠也不好',
-        conversation_history: []
+        message: '最近总是感觉疲劳，睡眠也不好'
     })
 });
 

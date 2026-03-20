@@ -37,19 +37,16 @@ class AIService:
     async def chat_stream(
         self, 
         user_message: str, 
-        system_prompt_file: str = "/prompts/system_prompt_wenzhen.txt",
-        conversation_history: list[dict] = None
+        system_prompt_file: str = "system_prompt_wenzhen.txt"
     ) -> AsyncGenerator[str, None]:
         system_prompt = self.get_system_prompt(system_prompt_file)
         
-        messages = [{"role": "system", "content": system_prompt}]
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
         
-        if conversation_history:
-            messages.extend(conversation_history)
-        
-        messages.append({"role": "user", "content": user_message})
-        
-        logger.info(f"AI chat request - model: {self.model}, messages: {len(messages)}")
+        logger.info(f"AI chat request - model: {self.model}")
         
         try:
             response = await self.client.chat.completions.create(

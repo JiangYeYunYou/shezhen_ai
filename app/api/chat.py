@@ -15,10 +15,7 @@ async def wenzhen_chat(request: ChatRequest):
     
     async def generate():
         try:
-            async for chunk in chat_service.wenzhen_chat(
-                message=request.message,
-                conversation_history=request.conversation_history
-            ):
+            async for chunk in chat_service.wenzhen_chat(message=request.message):
                 yield f"data: {chunk}\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:

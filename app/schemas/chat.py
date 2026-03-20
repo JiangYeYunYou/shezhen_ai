@@ -3,7 +3,6 @@ from pydantic import BaseModel, field_validator
 
 class ChatRequest(BaseModel):
     message: str
-    conversation_history: list[dict] = []
 
     @field_validator("message")
     @classmethod
@@ -17,7 +16,6 @@ class ChatRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "message": "最近总是感觉疲劳，睡眠也不好",
-                "conversation_history": []
+                "message": "最近总是感觉疲劳，睡眠也不好"
             }
         }
