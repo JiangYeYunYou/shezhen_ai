@@ -1,15 +1,46 @@
 import base64
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File
 
 from app.dependencies import get_current_user, get_diagnosis_service
 from app.models.user import User
 from app.services.diagnosis import DiagnosisService
+from app.services.chat import chat_service
 from app.schemas.diagnosis import DiagnosisResponse, DiagnosisListResponse, TongueDiagnosisResponse
+from app.schemas.chat import ChatRequest
 from app.schemas.response import ApiResponse, success_response, error_response
 from app.core.logging import get_logger
 
-router = APIRouter(prefix="/diagnosis", tags=["舌诊"])
+router = APIRouter(prefix="/consultation", tags=["问诊舌诊"])
 logger = get_logger(__name__)
+
+
+@router.post("/wenzhen", summary="中医问诊")
+async def wenzhen_chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user)
+):
+    logger.info(f"Wenzhen chat request: {request.message[:50]}...")
+    
+    async def generate():
+        try:
+            async for chunk in chat_service.wenzhen_chat(message=request.message):
+                yield f"data: {chunk}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            logger.error(f"Stream error: {e}", exc_info=True)
+            yield f"data: [ERROR] {str(e)}\n\n"
+    
+    from fastapi.responses import StreamingResponse
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
+        }
+    )
 
 
 @router.post("/tongue", response_model=ApiResponse[TongueDiagnosisResponse], summary="舌诊分析")

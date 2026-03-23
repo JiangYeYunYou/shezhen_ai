@@ -184,6 +184,17 @@ Authorization: Bearer <access_token>
 | created_at | datetime | 创建时间 |
 | updated_at | datetime | 更新时间 |
 
+### Diagnosis 诊断表
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | int | 诊断ID，主键，自增 |
+| user_id | int | 用户ID，外键 |
+| signs | text | 诊断出的体征 |
+| symptoms | text | 诊断出的症状 |
+| score | int | 健康得分(0-100) |
+| created_at | datetime | 创建时间 |
+
 ---
 
 ## 安全说明
@@ -201,13 +212,15 @@ Authorization: Bearer <access_token>
 
 ---
 
-## 问诊模块
+## 问诊舌诊模块
 
 ### 1. 中医问诊
 
-**接口地址**: `POST /api/chat/wenzhen`
+**接口地址**: `POST /api/consultation/wenzhen`
 
 **接口描述**: 与AI中医助手进行问诊对话，支持流式返回
+
+**认证方式**: Bearer Token (JWT)
 
 **请求参数**:
 
@@ -230,9 +243,12 @@ Authorization: Bearer <access_token>
 **前端调用示例**:
 
 ```javascript
-const response = await fetch('/api/chat/wenzhen', {
+const response = await fetch('/api/consultation/wenzhen', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer <access_token>'
+    },
     body: JSON.stringify({
         message: '最近总是感觉疲劳，睡眠也不好'
     })
@@ -265,11 +281,9 @@ while (true) {
 
 ---
 
-## 舌诊模块
+### 2. 舌诊分析
 
-### 1. 舌诊分析
-
-**接口地址**: `POST /api/diagnosis/tongue`
+**接口地址**: `POST /api/consultation/tongue`
 
 **接口描述**: 上传舌头照片进行AI舌诊分析
 
@@ -313,9 +327,11 @@ while (true) {
 }
 ```
 
-### 2. 获取诊断历史
+---
 
-**接口地址**: `GET /api/diagnosis/history`
+### 3. 获取诊断历史
+
+**接口地址**: `GET /api/consultation/history`
 
 **接口描述**: 获取当前用户的诊断历史记录
 
@@ -359,9 +375,11 @@ while (true) {
 }
 ```
 
-### 3. 获取诊断详情
+---
 
-**接口地址**: `GET /api/diagnosis/{diagnosis_id}`
+### 4. 获取诊断详情
+
+**接口地址**: `GET /api/consultation/{diagnosis_id}`
 
 **接口描述**: 获取指定诊断记录的详细信息
 
