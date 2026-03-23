@@ -1,0 +1,10 @@
+设计一个舌诊功能，其逻辑如下：
+    1.接收用户上传的舌头照片
+    2.判断上传的照片内容是不是舌头，如果不是则返回提示，是则继续
+    3.让大模型根据舌头图片进行诊断，用户获取回答
+    4.诊断结果存入数据库表（需要创建），该表与user表关联，使用user表的id作为外键，进行索引优化
+    5.结果响应式返回给前端，不用流式输出
+
+提示词文件位置（已准备，直接使用即可）：/prompts/system_prompt_shezhen.txt
+模型baseurl: https://dashscope.aliyuncs.com/compatible-mode/v1
+模型名字（ID）：qwen-vl-plus

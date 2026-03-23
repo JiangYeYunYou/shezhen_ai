@@ -1,0 +1,109 @@
+import base64
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+
+from app.dependencies import get_current_user, get_diagnosis_service
+from app.models.user import User
+from app.services.diagnosis import DiagnosisService
+from app.schemas.diagnosis import DiagnosisResponse, DiagnosisListResponse, TongueDiagnosisResponse
+from app.schemas.response import ApiResponse, success_response, error_response
+from app.core.logging import get_logger
+
+router = APIRouter(prefix="/diagnosis", tags=["舌诊"])
+logger = get_logger(__name__)
+
+
+@router.post("/tongue", response_model=ApiResponse[TongueDiagnosisResponse], summary="舌诊分析")
+async def diagnose_tongue(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    service: DiagnosisService = Depends(get_diagnosis_service)
+):
+    allowed_types = ["image/jpeg", "image/png", "image/jpg"]
+    if file.content_type not in allowed_types:
+        return error_response(message="仅支持 JPG、PNG 格式的图片", code=400)
+    
+    try:
+        image_data = await file.read()
+        image_base64 = base64.b64encode(image_data).decode("utf-8")
+        
+        diagnosis = await service.diagnose(current_user.id, image_base64)
+        
+        return success_response(
+            data=TongueDiagnosisResponse(
+                is_tongue=True,
+                signs=diagnosis.signs,
+                symptoms=diagnosis.symptoms,
+                score=diagnosis.score,
+                advice="诊断完成，请查看详细结果。"
+            ),
+            message="舌诊分析完成"
+        )
+    except ValueError as e:
+        return success_response(
+            data=TongueDiagnosisResponse(
+                is_tongue=False,
+                signs="",
+                symptoms="",
+                score=0,
+                advice=str(e)
+            ),
+            message="舌诊分析完成"
+        )
+    except Exception as e:
+        logger.error(f"Tongue diagnosis error: {e}", exc_info=True)
+        return error_response(message="舌诊分析失败，请稍后重试", code=500)
+
+
+@router.get("/history", response_model=ApiResponse[DiagnosisListResponse], summary="获取诊断历史")
+async def get_diagnosis_history(
+    limit: int = 10,
+    current_user: User = Depends(get_current_user),
+    service: DiagnosisService = Depends(get_diagnosis_service)
+):
+    diagnoses = await service.get_user_diagnoses(current_user.id, limit)
+    
+    items = [
+        DiagnosisResponse(
+            id=d.id,
+            user_id=d.user_id,
+            signs=d.signs,
+            symptoms=d.symptoms,
+            score=d.score,
+            created_at=d.created_at,
+            advice=""
+        )
+        for d in diagnoses
+    ]
+    
+    return success_response(
+        data=DiagnosisListResponse(total=len(items), items=items),
+        message="获取诊断历史成功"
+    )
+
+
+@router.get("/{diagnosis_id}", response_model=ApiResponse[DiagnosisResponse], summary="获取诊断详情")
+async def get_diagnosis_detail(
+    diagnosis_id: int,
+    current_user: User = Depends(get_current_user),
+    service: DiagnosisService = Depends(get_diagnosis_service)
+):
+    diagnosis = await service.get_diagnosis_by_id(diagnosis_id)
+    
+    if diagnosis is None:
+        return error_response(message="诊断记录不存在", code=404)
+    
+    if diagnosis.user_id != current_user.id:
+        return error_response(message="无权访问该诊断记录", code=403)
+    
+    return success_response(
+        data=DiagnosisResponse(
+            id=diagnosis.id,
+            user_id=diagnosis.user_id,
+            signs=diagnosis.signs,
+            symptoms=diagnosis.symptoms,
+            score=diagnosis.score,
+            created_at=diagnosis.created_at,
+            advice=""
+        ),
+        message="获取诊断详情成功"
+    )

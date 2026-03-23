@@ -8,6 +8,7 @@ from app.core.jwt import decode_access_token
 from app.core.config import settings
 from app.models.user import User
 from app.services.user import UserService
+from app.services.diagnosis import DiagnosisService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -40,3 +41,7 @@ async def get_current_user(
 
 def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db)
+
+
+def get_diagnosis_service(db: AsyncSession = Depends(get_db)) -> DiagnosisService:
+    return DiagnosisService(db)

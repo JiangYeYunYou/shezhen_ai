@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     AI_API_KEY: str = ""
     AI_MODEL_NAME: str = "deepseek-v3.2"
     
+    AI_VISION_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    AI_VISION_MODEL_NAME: str = "qwen-vl-plus"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
