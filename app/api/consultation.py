@@ -1,5 +1,6 @@
 import base64
 from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_current_user, get_diagnosis_service
 from app.models.user import User
@@ -30,7 +31,6 @@ async def wenzhen_chat(
             logger.error(f"Stream error: {e}", exc_info=True)
             yield f"data: [ERROR] {str(e)}\n\n"
     
-    from fastapi.responses import StreamingResponse
     return StreamingResponse(
         generate(),
         media_type="text/event-stream",
@@ -45,19 +45,33 @@ async def wenzhen_chat(
 
 @router.post("/tongue", response_model=ApiResponse[TongueDiagnosisResponse], summary="舌诊分析")
 async def diagnose_tongue(
-    file: UploadFile = File(...),
+    tongue_surface: UploadFile = File(..., description="舌面照片"),
+    tongue_bottom: UploadFile = File(None, description="舌底照片（可选）"),
     current_user: User = Depends(get_current_user),
     service: DiagnosisService = Depends(get_diagnosis_service)
 ):
     allowed_types = ["image/jpeg", "image/png", "image/jpg"]
-    if file.content_type not in allowed_types:
-        return error_response(message="仅支持 JPG、PNG 格式的图片", code=400)
+    
+    if tongue_surface.content_type not in allowed_types:
+        return error_response(message="舌面照片仅支持 JPG、PNG 格式", code=400)
+    
+    if tongue_bottom and tongue_bottom.content_type not in allowed_types:
+        return error_response(message="舌底照片仅支持 JPG、PNG 格式", code=400)
     
     try:
-        image_data = await file.read()
-        image_base64 = base64.b64encode(image_data).decode("utf-8")
+        tongue_surface_data = await tongue_surface.read()
+        tongue_surface_base64 = base64.b64encode(tongue_surface_data).decode("utf-8")
         
-        diagnosis = await service.diagnose(current_user.id, image_base64)
+        tongue_bottom_base64 = None
+        if tongue_bottom:
+            tongue_bottom_data = await tongue_bottom.read()
+            tongue_bottom_base64 = base64.b64encode(tongue_bottom_data).decode("utf-8")
+        
+        diagnosis = await service.diagnose(
+            current_user.id, 
+            tongue_surface_base64, 
+            tongue_bottom_base64
+        )
         
         return success_response(
             data=TongueDiagnosisResponse(

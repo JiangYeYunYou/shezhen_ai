@@ -12,8 +12,16 @@ class DiagnosisService:
     def __init__(self, session: AsyncSession):
         self.repository = DiagnosisRepository(session)
     
-    async def diagnose(self, user_id: int, image_base64: str) -> Diagnosis:
-        result = await vision_service.diagnose_tongue(image_base64)
+    async def diagnose(
+        self, 
+        user_id: int, 
+        tongue_surface_base64: str, 
+        tongue_bottom_base64: str = None
+    ) -> Diagnosis:
+        result = await vision_service.diagnose_tongue(
+            tongue_surface_base64, 
+            tongue_bottom_base64
+        )
         
         if not result.get("is_tongue", False):
             raise ValueError(result.get("advice", "请上传清晰的舌头照片进行诊断。"))

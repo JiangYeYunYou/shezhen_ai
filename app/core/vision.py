@@ -1,5 +1,4 @@
 import json
-from typing import AsyncGenerator
 from openai import AsyncOpenAI
 from pathlib import Path
 
@@ -35,24 +34,38 @@ class VisionService:
             self._system_prompt_cache[prompt_file] = load_system_prompt(prompt_file)
         return self._system_prompt_cache[prompt_file]
     
-    async def diagnose_tongue(self, image_base64: str) -> dict:
+    async def diagnose_tongue(self, tongue_surface_base64: str, tongue_bottom_base64: str = None) -> dict:
         system_prompt = self.get_system_prompt("system_prompt_shezhen.txt")
+        
+        content = [
+            {
+                "type": "text",
+                "text": "请根据以下舌头照片进行诊断分析。"
+            }
+        ]
+        
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{tongue_surface_base64}"}
+        })
+        content.append({
+            "type": "text",
+            "text": "这是舌面照片。"
+        })
+        
+        if tongue_bottom_base64:
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{tongue_bottom_base64}"}
+            })
+            content.append({
+                "type": "text",
+                "text": "这是舌底照片。请综合舌面和舌底两张照片进行诊断分析。"
+            })
         
         messages = [
             {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}
-                    },
-                    {
-                        "type": "text",
-                        "text": "请根据这张舌头照片进行诊断分析。"
-                    }
-                ]
-            }
+            {"role": "user", "content": content}
         ]
         
         logger.info(f"Vision diagnosis request - model: {self.model}")
@@ -63,10 +76,10 @@ class VisionService:
                 messages=messages,
             )
             
-            content = response.choices[0].message.content
-            logger.info(f"Vision response: {content[:200]}...")
+            result_content = response.choices[0].message.content
+            logger.info(f"Vision response: {result_content[:200]}...")
             
-            result = self._parse_response(content)
+            result = self._parse_response(result_content)
             return result
             
         except Exception as e:

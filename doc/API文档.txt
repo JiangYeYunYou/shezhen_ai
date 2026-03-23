@@ -285,7 +285,7 @@ while (true) {
 
 **接口地址**: `POST /api/consultation/tongue`
 
-**接口描述**: 上传舌头照片进行AI舌诊分析
+**接口描述**: 上传舌头照片进行AI舌诊分析，支持舌面和舌底照片
 
 **认证方式**: Bearer Token (JWT)
 
@@ -293,7 +293,27 @@ while (true) {
 
 | 参数名 | 类型 | 必填 | 说明 |
 |--------|------|------|------|
-| file | file | 是 | 舌头照片，支持JPG、PNG格式 |
+| tongue_surface | file | 是 | 舌面照片，支持JPG、PNG格式 |
+| tongue_bottom | file | 否 | 舌底照片，支持JPG、PNG格式（可选） |
+
+**请求示例**:
+
+```javascript
+const formData = new FormData();
+formData.append('tongue_surface', tongueSurfaceFile);
+formData.append('tongue_bottom', tongueBottomFile); // 可选
+
+const response = await fetch('/api/consultation/tongue', {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer <access_token>'
+    },
+    body: formData
+});
+
+const result = await response.json();
+console.log(result);
+```
 
 **响应示例**:
 
@@ -303,7 +323,7 @@ while (true) {
     "message": "舌诊分析完成",
     "data": {
         "is_tongue": true,
-        "signs": "舌色淡红，舌苔薄白，舌体适中，无齿痕",
+        "signs": "舌面：舌色淡红，舌苔薄白，舌体适中，无齿痕；舌底：络脉淡紫，无瘀点瘀斑",
         "symptoms": "根据舌象分析，可能存在脾胃虚弱、气血不足的情况",
         "score": 75,
         "advice": "诊断完成，请查看详细结果。"
@@ -326,6 +346,11 @@ while (true) {
     }
 }
 ```
+
+**说明**:
+- 舌面照片为必填项，舌底照片为可选项
+- 如果同时提供舌面和舌底照片，AI会综合分析两处特征进行诊断
+- 如果只提供舌面照片，AI会基于舌面特征进行诊断
 
 ---
 
