@@ -86,10 +86,10 @@ class VisionService:
             logger.error(f"Vision diagnosis error: {e}", exc_info=True)
             return {
                 "is_tongue": False,
-                "signs": "",
-                "symptoms": "",
+                "signs": [],
+                "symptoms": [],
                 "score": 0,
-                "advice": f"诊断服务暂时不可用，请稍后重试。错误: {str(e)}"
+                "advice": [f"诊断服务暂时不可用，请稍后重试。错误: {str(e)}"]
             }
     
     def _parse_response(self, content: str) -> dict:
@@ -98,17 +98,30 @@ class VisionService:
             json_end = content.rfind("}") + 1
             if json_start != -1 and json_end > json_start:
                 json_str = content[json_start:json_end]
-                return json.loads(json_str)
+                result = json.loads(json_str)
+                
+                result["signs"] = self._ensure_list(result.get("signs", []))
+                result["symptoms"] = self._ensure_list(result.get("symptoms", []))
+                result["advice"] = self._ensure_list(result.get("advice", []))
+                
+                return result
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
         
         return {
             "is_tongue": False,
-            "signs": "",
-            "symptoms": "",
+            "signs": [],
+            "symptoms": [],
             "score": 0,
-            "advice": "无法解析诊断结果，请重试。"
+            "advice": ["无法解析诊断结果，请重试。"]
         }
+    
+    def _ensure_list(self, value) -> list[str]:
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            return [value] if value else []
+        return []
 
 
 vision_service = VisionService()

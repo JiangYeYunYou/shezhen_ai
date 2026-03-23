@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 
 
 class DiagnosisBase(BaseModel):
-    signs: str
-    symptoms: str
+    signs: list[str]
+    symptoms: list[str]
     score: int = Field(ge=0, le=100)
 
 
@@ -16,7 +16,7 @@ class DiagnosisResponse(DiagnosisBase):
     id: int
     user_id: int
     created_at: datetime
-    advice: str = ""
+    advice: list[str] = []
     
     class Config:
         from_attributes = True
@@ -29,7 +29,7 @@ class DiagnosisListResponse(BaseModel):
 
 class TongueDiagnosisResponse(BaseModel):
     is_tongue: bool
-    signs: str
-    symptoms: str
+    signs: list[str]
+    symptoms: list[str]
     score: int = Field(ge=0, le=100)
-    advice: str
+    advice: list[str]

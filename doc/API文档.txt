@@ -190,9 +190,10 @@ Authorization: Bearer <access_token>
 |------|------|------|
 | id | int | 诊断ID，主键，自增 |
 | user_id | int | 用户ID，外键 |
-| signs | text | 诊断出的体征 |
-| symptoms | text | 诊断出的症状 |
+| signs | text | 诊断出的体征（JSON数组格式存储） |
+| symptoms | text | 诊断出的症状（JSON数组格式存储） |
 | score | int | 健康得分(0-100) |
+| advice | varchar(2000) | 治疗建议（JSON数组格式存储） |
 | created_at | datetime | 创建时间 |
 
 ---
@@ -323,10 +324,10 @@ console.log(result);
     "message": "舌诊分析完成",
     "data": {
         "is_tongue": true,
-        "signs": "舌面：舌色淡红，舌苔薄白，舌体适中，无齿痕；舌底：络脉淡紫，无瘀点瘀斑",
-        "symptoms": "根据舌象分析，可能存在脾胃虚弱、气血不足的情况",
+        "signs": ["舌色淡红，舌苔薄白", "舌体适中，无齿痕"],
+        "symptoms": ["可能存在脾胃虚弱", "气血不足"],
         "score": 75,
-        "advice": "诊断完成，请查看详细结果。"
+        "advice": ["饮食建议：多吃健脾益气的食物", "作息建议：保持规律作息"]
     }
 }
 ```
@@ -339,10 +340,10 @@ console.log(result);
     "message": "舌诊分析完成",
     "data": {
         "is_tongue": false,
-        "signs": "",
-        "symptoms": "",
+        "signs": [],
+        "symptoms": [],
         "score": 0,
-        "advice": "请上传清晰的舌头照片进行诊断。"
+        "advice": ["请上传清晰的舌头照片进行诊断。"]
     }
 }
 ```
@@ -380,20 +381,20 @@ console.log(result);
             {
                 "id": 1,
                 "user_id": 1,
-                "signs": "舌色淡红，舌苔薄白",
-                "symptoms": "脾胃虚弱",
+                "signs": ["舌色淡红，舌苔薄白"],
+                "symptoms": ["脾胃虚弱"],
                 "score": 75,
                 "created_at": "2024-01-15T10:30:00",
-                "advice": ""
+                "advice": ["饮食建议：多吃健脾益气的食物"]
             },
             {
                 "id": 2,
                 "user_id": 1,
-                "signs": "舌色偏红，舌苔黄腻",
-                "symptoms": "湿热内蕴",
+                "signs": ["舌色偏红，舌苔黄腻"],
+                "symptoms": ["湿热内蕴"],
                 "score": 60,
                 "created_at": "2024-01-14T15:20:00",
-                "advice": ""
+                "advice": ["建议清淡饮食"]
             }
         ]
     }
@@ -425,11 +426,11 @@ console.log(result);
     "data": {
         "id": 1,
         "user_id": 1,
-        "signs": "舌色淡红，舌苔薄白，舌体适中，无齿痕",
-        "symptoms": "根据舌象分析，可能存在脾胃虚弱、气血不足的情况",
+        "signs": ["舌色淡红，舌苔薄白", "舌体适中，无齿痕"],
+        "symptoms": ["脾胃虚弱", "气血不足"],
         "score": 75,
         "created_at": "2024-01-15T10:30:00",
-        "advice": ""
+        "advice": ["饮食建议：多吃健脾益气的食物", "作息建议：保持规律作息"]
     }
 }
 ```

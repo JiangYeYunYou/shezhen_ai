@@ -1,4 +1,5 @@
 import base64
+import json
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
 
@@ -76,10 +77,10 @@ async def diagnose_tongue(
         return success_response(
             data=TongueDiagnosisResponse(
                 is_tongue=True,
-                signs=diagnosis.signs,
-                symptoms=diagnosis.symptoms,
+                signs=diagnosis.signs_list,
+                symptoms=diagnosis.symptoms_list,
                 score=diagnosis.score,
-                advice="诊断完成，请查看详细结果。"
+                advice=diagnosis.advice_list
             ),
             message="舌诊分析完成"
         )
@@ -87,10 +88,10 @@ async def diagnose_tongue(
         return success_response(
             data=TongueDiagnosisResponse(
                 is_tongue=False,
-                signs="",
-                symptoms="",
+                signs=[],
+                symptoms=[],
                 score=0,
-                advice=str(e)
+                advice=[str(e)]
             ),
             message="舌诊分析完成"
         )
@@ -111,11 +112,11 @@ async def get_diagnosis_history(
         DiagnosisResponse(
             id=d.id,
             user_id=d.user_id,
-            signs=d.signs,
-            symptoms=d.symptoms,
+            signs=d.signs_list,
+            symptoms=d.symptoms_list,
             score=d.score,
             created_at=d.created_at,
-            advice=""
+            advice=d.advice_list
         )
         for d in diagnoses
     ]
@@ -144,11 +145,11 @@ async def get_diagnosis_detail(
         data=DiagnosisResponse(
             id=diagnosis.id,
             user_id=diagnosis.user_id,
-            signs=diagnosis.signs,
-            symptoms=diagnosis.symptoms,
+            signs=diagnosis.signs_list,
+            symptoms=diagnosis.symptoms_list,
             score=diagnosis.score,
             created_at=diagnosis.created_at,
-            advice=""
+            advice=diagnosis.advice_list
         ),
         message="获取诊断详情成功"
     )

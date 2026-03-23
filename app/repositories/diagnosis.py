@@ -1,3 +1,4 @@
+import json
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,15 +27,17 @@ class DiagnosisRepository:
     async def create(
         self,
         user_id: int,
-        signs: str,
-        symptoms: str,
-        score: int
+        signs: list[str],
+        symptoms: list[str],
+        score: int,
+        advice: list[str] = None
     ) -> Diagnosis:
         diagnosis = Diagnosis(
             user_id=user_id,
-            signs=signs,
-            symptoms=symptoms,
-            score=score
+            signs=json.dumps(signs, ensure_ascii=False),
+            symptoms=json.dumps(symptoms, ensure_ascii=False),
+            score=score,
+            advice=json.dumps(advice or [], ensure_ascii=False)
         )
         self.session.add(diagnosis)
         await self.session.flush()

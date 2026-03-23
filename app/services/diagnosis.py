@@ -24,13 +24,17 @@ class DiagnosisService:
         )
         
         if not result.get("is_tongue", False):
-            raise ValueError(result.get("advice", "请上传清晰的舌头照片进行诊断。"))
+            advice = result.get("advice", ["请上传清晰的舌头照片进行诊断。"])
+            if isinstance(advice, list):
+                raise ValueError(advice[0] if advice else "请上传清晰的舌头照片进行诊断。")
+            raise ValueError(advice)
         
         diagnosis = await self.repository.create(
             user_id=user_id,
-            signs=result.get("signs", ""),
-            symptoms=result.get("symptoms", ""),
-            score=result.get("score", 0)
+            signs=result.get("signs", []),
+            symptoms=result.get("symptoms", []),
+            score=result.get("score", 0),
+            advice=result.get("advice", [])
         )
         
         logger.info(f"Diagnosis created for user {user_id}, score: {diagnosis.score}")
