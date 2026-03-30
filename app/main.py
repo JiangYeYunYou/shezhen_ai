@@ -10,6 +10,7 @@ from app.core.database import init_db
 from app.core.logging import setup_logging, get_logger
 from app.api.auth import router as auth_router
 from app.api.consultation import router as consultation_router
+from app.api.lunar import router as lunar_router
 
 setup_logging(log_level=settings.LOG_LEVEL)
 logger = get_logger(__name__)
@@ -40,6 +41,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(consultation_router, prefix="/api")
+app.include_router(lunar_router, prefix="/api")
 
 
 @app.middleware("http")
