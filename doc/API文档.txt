@@ -451,9 +451,9 @@ console.log(result);
 
 ### 5. 获取农历信息
 
-**接口地址**: `GET /api/lunar`
+**接口地址**: `GET /api/utils/lunar`
 
-**接口描述**: 获取指定日期的农历信息，包括农历日期、宜忌、节日等
+**接口描述**: 获取指定日期的农历信息，包括农历日期、干支历、宜忌、节日等
 
 **认证方式**: 无需认证
 
@@ -466,8 +466,8 @@ console.log(result);
 **请求示例**:
 
 ```
-GET /api/lunar
-GET /api/lunar?date_str=2026-03-30
+GET /api/utils/lunar
+GET /api/utils/lunar?date_str=2026-03-30
 ```
 
 **响应示例**:
@@ -479,11 +479,12 @@ GET /api/lunar?date_str=2026-03-30
     "data": {
         "date": "2026-03-30",
         "lunar_date": "农历二月十二",
+        "ganzhi": "丙午年 乙丑日",
         "weekday": "星期一",
         "season": "春",
         "festival": "无",
-        "yi": ["祭祀", "祈福", "求嗣"],
-        "ji": ["动土", "修造"]
+        "yi": ["祭祀", "修造", "动土"],
+        "ji": ["嫁娶", "开市"]
     }
 }
 ```
@@ -494,6 +495,7 @@ GET /api/lunar?date_str=2026-03-30
 |------|------|------|
 | date | string | 公历日期 |
 | lunar_date | string | 农历日期 |
+| ganzhi | string | 干支历（年柱 日柱） |
 | weekday | string | 星期几 |
 | season | string | 季节（春/夏/秋/冬） |
 | festival | string | 今日节日，无节日返回"无" |

@@ -6,11 +6,11 @@ from app.schemas.response import ApiResponse, success_response
 from app.services.lunar import lunar_service
 from app.core.logging import get_logger
 
-router = APIRouter(prefix="/lunar", tags=["农历信息"])
+router = APIRouter(prefix="/utils", tags=["工具类"])
 logger = get_logger(__name__)
 
 
-@router.get("", response_model=ApiResponse[LunarCalendarResponse], summary="获取农历信息")
+@router.get("/lunar", response_model=ApiResponse[LunarCalendarResponse], summary="获取农历信息")
 async def get_lunar_info(
     date_str: str = Query(None, description="日期，格式：YYYY-MM-DD，默认今天")
 ):

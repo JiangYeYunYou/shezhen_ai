@@ -139,18 +139,22 @@ class LunarService:
         lunar_day_name = LUNAR_DAY_NAMES.get(lunar_day, f"{lunar_day}日")
         lunar_date_str = f"农历{lunar_month_name}{lunar_day_name}"
         
+        ganzhi_year = zh_date.gānzhī_year
+        ganzhi_day = zh_date.gānzhī_day
+        ganzhi_str = f"{ganzhi_year}年 {ganzhi_day}日"
+        
         weekday = WEEKDAYS[target_date.weekday()]
         
         season = self._get_season(target_date.month)
         
         festivals = self._get_festivals(target_date, lunar_month, lunar_day)
         
-        ganzhi = zh_date.gānzhī_year
-        yi_ji = YI_JI_DATA.get(ganzhi, {"yi": ["诸事皆宜"], "ji": ["无"]})
+        yi_ji = YI_JI_DATA.get(ganzhi_day, {"yi": ["诸事皆宜"], "ji": ["无"]})
         
         return LunarCalendarResponse(
             date=target_date.strftime("%Y-%m-%d"),
             lunar_date=lunar_date_str,
+            ganzhi=ganzhi_str,
             weekday=weekday,
             season=season,
             festival=festivals,
