@@ -221,7 +221,7 @@ Authorization: Bearer <access_token>
 
 **接口描述**: 与AI中医助手进行问诊对话，支持流式返回
 
-**认证方式**: Bearer Token (JWT)
+**认证方式**: 无需认证（免费资源）
 
 **请求参数**:
 
@@ -247,8 +247,7 @@ Authorization: Bearer <access_token>
 const response = await fetch('/api/consultation/wenzhen', {
     method: 'POST',
     headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer <access_token>'
+        'Content-Type': 'application/json'
     },
     body: JSON.stringify({
         message: '最近总是感觉疲劳，睡眠也不好'

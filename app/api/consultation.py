@@ -18,8 +18,7 @@ logger = get_logger(__name__)
 
 @router.post("/wenzhen", summary="中医问诊")
 async def wenzhen_chat(
-    request: ChatRequest,
-    current_user: User = Depends(get_current_user)
+    request: ChatRequest
 ):
     logger.info(f"Wenzhen chat request: {request.message[:50]}...")
     
