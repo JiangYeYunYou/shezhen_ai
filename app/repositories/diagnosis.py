@@ -16,12 +16,14 @@ class DiagnosisRepository:
         return result.scalar_one_or_none()
     
     async def find_by_user_id(self, user_id: int, limit: int = 10) -> list[Diagnosis]:
-        result = await self.session.execute(
+        query = (
             select(Diagnosis)
             .where(Diagnosis.user_id == user_id)
             .order_by(Diagnosis.created_at.desc())
-            .limit(limit)
         )
+        if limit > 0:
+            query = query.limit(limit)
+        result = await self.session.execute(query)
         return list(result.scalars().all())
     
     async def create(
