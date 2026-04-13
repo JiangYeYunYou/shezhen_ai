@@ -244,6 +244,8 @@ Authorization: Bearer <access_token>
 | constitution | text | 体质分析（JSON格式存储） |
 | health_score | text | 健康评分详情（JSON格式存储） |
 | advice | text | 调理建议 |
+| tongue_surface_image | LONGBLOB | 舌面图片（BLOB格式存储，750x750或原始尺寸） |
+| tongue_bottom_image | LONGBLOB | 舌底图片（BLOB格式存储，750x750或原始尺寸） |
 | created_at | datetime | 创建时间 |
 
 **tongue_analysis JSON结构**:
@@ -445,10 +447,11 @@ console.log(result);
             "总体特征": "阴阳气血调和",
             "发病倾向": "不易患病"
         },
-        "调理建议": "身体状态良好，建议保持现有的健康生活方式。"
+        "调理建议": "身体状态良好，建议保持现有的健康生活方式。",
+        "舌面图片": "base64编码的图片数据",
+        "舌底图片": "base64编码的图片数据"
     }
 }
-```
 
 **健康等级说明**:
 
@@ -459,6 +462,12 @@ console.log(result);
 | 60~74 | 轻度异常 | 注意 |
 | 40~59 | 中度异常 | 警示 |
 | 0~39 | 重度异常 | 危急 |
+
+**图片存储说明**:
+- 系统会自动存储舌面和舌底图片
+- 如果原始图片小于1MB，则保持原始尺寸和格式
+- 如果原始图片大于1MB，则调整为750×750分辨率并压缩至1MB以下
+- 图片以base64编码格式返回，前端可直接使用
 
 **错误响应示例**:
 
@@ -556,6 +565,8 @@ console.log(result);
                     "标签": "优良"
                 },
                 "advice": "身体状态良好，建议保持现有的健康生活方式。",
+                "tongue_surface_image": "base64编码的舌面图片数据",
+                "tongue_bottom_image": "base64编码的舌底图片数据",
                 "created_at": "2024-01-15T10:30:00"
             },
             {
@@ -587,6 +598,8 @@ console.log(result);
                     "标签": "注意"
                 },
                 "advice": "建议温阳健脾，活血化瘀。",
+                "tongue_surface_image": "base64编码的舌面图片数据",
+                "tongue_bottom_image": "base64编码的舌底图片数据",
                 "created_at": "2024-01-14T15:20:00"
             }
         ]
@@ -645,10 +658,11 @@ console.log(result);
             "标签": "优良"
         },
         "advice": "身体状态良好，建议保持现有的健康生活方式。",
+        "tongue_surface_image": "base64编码的舌面图片数据",
+        "tongue_bottom_image": "base64编码的舌底图片数据",
         "created_at": "2024-01-15T10:30:00"
     }
 }
-```
 
 **错误响应**:
 
@@ -657,6 +671,7 @@ console.log(result);
     "code": 404,
     "message": "诊断记录不存在",
     "data": null
+}
 }
 ```
 
