@@ -37,6 +37,15 @@ class DiagnosisService:
         except Exception as e:
             logger.error(f"Failed to process tongue surface image: {e}", exc_info=True)
         
+        tongue_bottom_image = None
+        if tongue_bottom_base64:
+            try:
+                tongue_bottom_bytes = base64.b64decode(tongue_bottom_base64)
+                tongue_bottom_image = process_tongue_image(tongue_bottom_bytes)
+                logger.info(f"Tongue bottom image processed: {len(tongue_bottom_image)} bytes")
+            except Exception as e:
+                logger.error(f"Failed to process tongue bottom image: {e}", exc_info=True)
+        
         diagnosis = await self.repository.create(
             user_id=user_id,
             tongue_analysis=result.get("舌象分析", {}),
@@ -44,7 +53,8 @@ class DiagnosisService:
             constitution=result.get("体质分析", {}),
             health_score=result.get("健康评分", {}),
             advice=result.get("调理建议", ""),
-            tongue_surface_image=tongue_surface_image
+            tongue_surface_image=tongue_surface_image,
+            tongue_bottom_image=tongue_bottom_image
         )
         
         logger.info(f"Diagnosis created for user {user_id}, total score: {diagnosis.health_score_dict.get('总分', 0)}")

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -57,6 +58,8 @@ class TongueDiagnosisResponse(BaseModel):
     可能有以下的证型: list[str]
     体质分析: ConstitutionAnalysis
     调理建议: str
+    舌面图片: Optional[str] = Field(None, description="舌面图片的base64编码")
+    舌底图片: Optional[str] = Field(None, description="舌底图片的base64编码")
 
 
 class DiagnosisBase(BaseModel):
@@ -79,6 +82,8 @@ class DiagnosisResponse(BaseModel):
     constitution: dict
     health_score: dict
     advice: str
+    tongue_surface_image: Optional[str] = Field(None, description="舌面图片的base64编码")
+    tongue_bottom_image: Optional[str] = Field(None, description="舌底图片的base64编码")
     created_at: datetime
     
     class Config:

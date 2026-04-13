@@ -100,6 +100,14 @@ def _build_tongue_response(diagnosis) -> TongueDiagnosisResponse:
     tongue_analysis = diagnosis.tongue_analysis_dict
     health_score = diagnosis.health_score_dict
     
+    tongue_surface_image_base64 = None
+    if diagnosis.tongue_surface_image:
+        tongue_surface_image_base64 = base64.b64encode(diagnosis.tongue_surface_image).decode("utf-8")
+    
+    tongue_bottom_image_base64 = None
+    if diagnosis.tongue_bottom_image:
+        tongue_bottom_image_base64 = base64.b64encode(diagnosis.tongue_bottom_image).decode("utf-8")
+    
     return TongueDiagnosisResponse(
         舌象分析=TongueAnalysis(
             舌色=TongueFeature(**tongue_analysis.get("舌色", {"特征": "未识别", "描述": "", "主病": ""})),
@@ -121,7 +129,9 @@ def _build_tongue_response(diagnosis) -> TongueDiagnosisResponse:
         ),
         可能有以下的证型=diagnosis.syndromes_list,
         体质分析=ConstitutionAnalysis(**diagnosis.constitution_dict),
-        调理建议=diagnosis.advice
+        调理建议=diagnosis.advice,
+        舌面图片=tongue_surface_image_base64,
+        舌底图片=tongue_bottom_image_base64
     )
 
 
@@ -164,8 +174,17 @@ async def get_diagnosis_history(
 ):
     diagnoses = await service.get_user_diagnoses(current_user.id, limit)
     
-    items = [
-        DiagnosisResponse(
+    items = []
+    for d in diagnoses:
+        tongue_surface_image_base64 = None
+        if d.tongue_surface_image:
+            tongue_surface_image_base64 = base64.b64encode(d.tongue_surface_image).decode("utf-8")
+        
+        tongue_bottom_image_base64 = None
+        if d.tongue_bottom_image:
+            tongue_bottom_image_base64 = base64.b64encode(d.tongue_bottom_image).decode("utf-8")
+        
+        items.append(DiagnosisResponse(
             id=d.id,
             user_id=d.user_id,
             tongue_analysis=d.tongue_analysis_dict,
@@ -173,10 +192,10 @@ async def get_diagnosis_history(
             constitution=d.constitution_dict,
             health_score=d.health_score_dict,
             advice=d.advice,
+            tongue_surface_image=tongue_surface_image_base64,
+            tongue_bottom_image=tongue_bottom_image_base64,
             created_at=d.created_at
-        )
-        for d in diagnoses
-    ]
+        ))
     
     return success_response(
         data=DiagnosisListResponse(total=len(items), items=items),
@@ -198,6 +217,14 @@ async def get_diagnosis_detail(
     if diagnosis.user_id != current_user.id:
         return error_response(message="无权访问该诊断记录", code=403)
     
+    tongue_surface_image_base64 = None
+    if diagnosis.tongue_surface_image:
+        tongue_surface_image_base64 = base64.b64encode(diagnosis.tongue_surface_image).decode("utf-8")
+    
+    tongue_bottom_image_base64 = None
+    if diagnosis.tongue_bottom_image:
+        tongue_bottom_image_base64 = base64.b64encode(diagnosis.tongue_bottom_image).decode("utf-8")
+    
     return success_response(
         data=DiagnosisResponse(
             id=diagnosis.id,
@@ -207,6 +234,8 @@ async def get_diagnosis_detail(
             constitution=diagnosis.constitution_dict,
             health_score=diagnosis.health_score_dict,
             advice=diagnosis.advice,
+            tongue_surface_image=tongue_surface_image_base64,
+            tongue_bottom_image=tongue_bottom_image_base64,
             created_at=diagnosis.created_at
         ),
         message="获取诊断详情成功"

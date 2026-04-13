@@ -17,6 +17,7 @@ class Diagnosis(Base):
     health_score: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     advice: Mapped[str] = mapped_column(Text, nullable=False, default="")
     tongue_surface_image: Mapped[bytes] = mapped_column(LONGBLOB, nullable=True)
+    tongue_bottom_image: Mapped[bytes] = mapped_column(LONGBLOB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     
     __table_args__ = (
