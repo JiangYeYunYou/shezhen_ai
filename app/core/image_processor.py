@@ -10,7 +10,7 @@ MAX_FILE_SIZE = 1024 * 1024
 
 def process_tongue_image(image_bytes: bytes) -> bytes:
     """
-    处理舌面图片：调整分辨率为750x750，压缩至1MB以下
+    处理舌面图片：如果原始图片小于1MB则不修改分辨率，否则调整分辨率为750x750并压缩至1MB以下
     
     Args:
         image_bytes: 原始图片的字节数据
@@ -19,6 +19,14 @@ def process_tongue_image(image_bytes: bytes) -> bytes:
         处理后的图片字节数据
     """
     try:
+        original_size = len(image_bytes)
+        
+        if original_size <= MAX_FILE_SIZE:
+            logger.info(f"Original image size {original_size} bytes is under 1MB, returning without modification")
+            return image_bytes
+        
+        logger.info(f"Original image size {original_size} bytes exceeds 1MB, processing...")
+        
         image = Image.open(io.BytesIO(image_bytes))
         
         if image.mode in ('RGBA', 'P'):
