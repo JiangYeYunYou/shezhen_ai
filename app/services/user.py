@@ -44,3 +44,10 @@ class UserService:
     
     async def get_by_username(self, username: str) -> User | None:
         return await self.repository.find_by_username(username)
+    
+    async def delete_by_id(self, user_id: int) -> bool:
+        user = await self.repository.find_by_id(user_id)
+        if not user:
+            return False
+        await self.repository.delete(user)
+        return True

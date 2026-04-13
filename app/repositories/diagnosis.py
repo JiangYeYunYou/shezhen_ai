@@ -29,17 +29,19 @@ class DiagnosisRepository:
     async def create(
         self,
         user_id: int,
-        signs: list[str],
-        symptoms: list[str],
-        score: int,
-        advice: list[str] = None
+        tongue_analysis: dict,
+        syndromes: list[str],
+        constitution: dict,
+        health_score: dict,
+        advice: str = ""
     ) -> Diagnosis:
         diagnosis = Diagnosis(
             user_id=user_id,
-            signs=json.dumps(signs, ensure_ascii=False),
-            symptoms=json.dumps(symptoms, ensure_ascii=False),
-            score=score,
-            advice=json.dumps(advice or [], ensure_ascii=False)
+            tongue_analysis=json.dumps(tongue_analysis, ensure_ascii=False),
+            syndromes=json.dumps(syndromes, ensure_ascii=False),
+            constitution=json.dumps(constitution, ensure_ascii=False),
+            health_score=json.dumps(health_score, ensure_ascii=False),
+            advice=advice
         )
         self.session.add(diagnosis)
         await self.session.flush()

@@ -34,8 +34,11 @@ class VisionService:
             self._system_prompt_cache[prompt_file] = load_system_prompt(prompt_file)
         return self._system_prompt_cache[prompt_file]
     
-    async def diagnose_tongue(self, tongue_surface_base64: str, tongue_bottom_base64: str = None) -> dict:
-        system_prompt = self.get_system_prompt("system_prompt_shezhen.txt")
+    async def diagnose_tongue(self, tongue_surface_base64: str, tongue_bottom_base64: str) -> dict:
+        # 清除缓存以使用最新的提示词
+        if "system_prompt_shezhen_v2_txt" in self._system_prompt_cache:
+            del self._system_prompt_cache["system_prompt_shezhen_v2_txt"]
+        system_prompt = self.get_system_prompt("system_prompt_shezhen_v2_txt")
         
         content = [
             {
@@ -53,15 +56,14 @@ class VisionService:
             "text": "这是舌面照片。"
         })
         
-        if tongue_bottom_base64:
-            content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{tongue_bottom_base64}"}
-            })
-            content.append({
-                "type": "text",
-                "text": "这是舌底照片。请综合舌面和舌底两张照片进行诊断分析。"
-            })
+        content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/jpeg;base64,{tongue_bottom_base64}"}
+        })
+        content.append({
+            "type": "text",
+            "text": "这是舌底照片。请综合舌面和舌底两张照片进行全面分析。"
+        })
         
         messages = [
             {"role": "system", "content": system_prompt},
@@ -84,13 +86,7 @@ class VisionService:
             
         except Exception as e:
             logger.error(f"Vision diagnosis error: {e}", exc_info=True)
-            return {
-                "is_tongue": False,
-                "signs": [],
-                "symptoms": [],
-                "score": 0,
-                "advice": [f"诊断服务暂时不可用，请稍后重试。错误: {str(e)}"]
-            }
+            return self._get_error_response(f"诊断服务暂时不可用，请稍后重试。错误: {str(e)}")
     
     def _parse_response(self, content: str) -> dict:
         try:
@@ -100,28 +96,74 @@ class VisionService:
                 json_str = content[json_start:json_end]
                 result = json.loads(json_str)
                 
-                result["signs"] = self._ensure_list(result.get("signs", []))
-                result["symptoms"] = self._ensure_list(result.get("symptoms", []))
-                result["advice"] = self._ensure_list(result.get("advice", []))
+                tongue_analysis = result.get("舌象分析", {})
+                health_score = result.get("健康评分", {})
+                syndromes = result.get("可能有以下的证型", [])
+                constitution = result.get("体质分析", {})
+                advice = result.get("调理建议", "")
                 
-                return result
+                return {
+                    "舌象分析": {
+                        "舌色": tongue_analysis.get("舌色", {"特征": "未识别", "描述": "", "主病": ""}),
+                        "舌形": tongue_analysis.get("舌形", {"特征": "未识别", "描述": "", "主病": ""}),
+                        "苔色": tongue_analysis.get("苔色", {"特征": "未识别", "描述": "", "主病": ""}),
+                        "苔质": tongue_analysis.get("苔质", []),
+                        "舌下络脉": tongue_analysis.get("舌下络脉", {"特征": "未识别", "描述": "", "主病": ""})
+                    },
+                    "健康评分": {
+                        "舌色健康度": health_score.get("舌色健康度", {"得分": 0}),
+                        "舌形健康度": health_score.get("舌形健康度", {"得分": 0}),
+                        "苔色健康度": health_score.get("苔色健康度", {"得分": 0}),
+                        "苔质健康度": health_score.get("苔质健康度", {"得分": 0}),
+                        "舌下络脉健康度": health_score.get("舌下络脉健康度", {"得分": 0}),
+                        "综合体质评估": health_score.get("综合体质评估", {"得分": 0}),
+                        "总分": health_score.get("总分", 0),
+                        "健康等级": health_score.get("健康等级", "未识别"),
+                        "标签": health_score.get("标签", "")
+                    },
+                    "可能有以下的证型": syndromes if isinstance(syndromes, list) else [syndromes] if syndromes else [],
+                    "体质分析": {
+                        "主体质": constitution.get("主体质", "未识别"),
+                        "副体质": constitution.get("副体质", ""),
+                        "总体特征": constitution.get("总体特征", ""),
+                        "发病倾向": constitution.get("发病倾向", "")
+                    },
+                    "调理建议": advice if advice else ""
+                }
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse JSON response: {e}")
         
-        return {
-            "is_tongue": False,
-            "signs": [],
-            "symptoms": [],
-            "score": 0,
-            "advice": ["无法解析诊断结果，请重试。"]
-        }
+        return self._get_error_response("无法解析诊断结果，请重试。")
     
-    def _ensure_list(self, value) -> list[str]:
-        if isinstance(value, list):
-            return value
-        if isinstance(value, str):
-            return [value] if value else []
-        return []
+    def _get_error_response(self, message: str) -> dict:
+        return {
+            "舌象分析": {
+                "舌色": {"特征": "未识别", "描述": "", "主病": ""},
+                "舌形": {"特征": "未识别", "描述": "", "主病": ""},
+                "苔色": {"特征": "未识别", "描述": "", "主病": ""},
+                "苔质": [],
+                "舌下络脉": {"特征": "未识别", "描述": "", "主病": ""}
+            },
+            "健康评分": {
+                "舌色健康度": {"得分": 0},
+                "舌形健康度": {"得分": 0},
+                "苔色健康度": {"得分": 0},
+                "苔质健康度": {"得分": 0},
+                "舌下络脉健康度": {"得分": 0},
+                "综合体质评估": {"得分": 0},
+                "总分": 0,
+                "健康等级": "未识别",
+                "标签": ""
+            },
+            "可能有以下的证型": [],
+            "体质分析": {
+                "主体质": "未识别",
+                "副体质": "",
+                "总体特征": "",
+                "发病倾向": ""
+            },
+            "调理建议": message
+        }
 
 
 vision_service = VisionService()

@@ -23,21 +23,20 @@ class DiagnosisService:
             tongue_bottom_base64
         )
         
-        if not result.get("is_tongue", False):
-            advice = result.get("advice", ["请上传清晰的舌头照片进行诊断。"])
-            if isinstance(advice, list):
-                raise ValueError(advice[0] if advice else "请上传清晰的舌头照片进行诊断。")
-            raise ValueError(advice)
+        tongue_analysis = result.get("舌象分析", {})
+        if tongue_analysis.get("舌色", {}).get("特征") == "未识别":
+            raise ValueError(result.get("调理建议", "请上传清晰的舌头照片进行诊断。"))
         
         diagnosis = await self.repository.create(
             user_id=user_id,
-            signs=result.get("signs", []),
-            symptoms=result.get("symptoms", []),
-            score=result.get("score", 0),
-            advice=result.get("advice", [])
+            tongue_analysis=result.get("舌象分析", {}),
+            syndromes=result.get("可能有以下的证型", []),
+            constitution=result.get("体质分析", {}),
+            health_score=result.get("健康评分", {}),
+            advice=result.get("调理建议", "")
         )
         
-        logger.info(f"Diagnosis created for user {user_id}, score: {diagnosis.score}")
+        logger.info(f"Diagnosis created for user {user_id}, total score: {diagnosis.health_score_dict.get('总分', 0)}")
         
         return diagnosis
     

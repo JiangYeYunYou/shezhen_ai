@@ -38,3 +38,22 @@ async def login(
         )
     except ValueError as e:
         return error_response(message=str(e), code=401)
+
+
+@router.delete("/user/{user_id}", response_model=ApiResponse[None], summary="删除用户", 
+               description="⚠️ **警告：此接口仅供后端管理使用，前端请勿调用！**")
+async def delete_user(
+    user_id: int,
+    service: UserService = Depends(get_user_service)
+):
+    """
+    ⚠️ 警告：此接口仅供后端管理使用，前端请勿调用！
+    
+    根据用户ID删除用户账号及其所有相关数据。
+    此操作不可逆，请谨慎使用。
+    """
+    success = await service.delete_by_id(user_id)
+    if success:
+        return success_response(data=None, message="用户删除成功")
+    else:
+        return error_response(message="用户不存在", code=404)

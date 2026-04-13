@@ -7,7 +7,18 @@ from app.dependencies import get_current_user, get_diagnosis_service
 from app.models.user import User
 from app.services.diagnosis import DiagnosisService
 from app.services.chat import chat_service
-from app.schemas.diagnosis import DiagnosisResponse, DiagnosisListResponse, TongueDiagnosisResponse
+from app.schemas.diagnosis import (
+    DiagnosisResponse, 
+    DiagnosisListResponse, 
+    TongueDiagnosisResponse,
+    TongueAnalysis,
+    TongueFeature,
+    TongueCoatingFeature,
+    SublingualVein,
+    ConstitutionAnalysis,
+    HealthScoreDetail,
+    HealthScoreItem
+)
 from app.schemas.chat import ChatRequest
 from app.schemas.response import ApiResponse, success_response, error_response
 from app.core.logging import get_logger
@@ -46,7 +57,7 @@ async def wenzhen_chat(
 @router.post("/tongue", response_model=ApiResponse[TongueDiagnosisResponse], summary="舌诊分析")
 async def diagnose_tongue(
     tongue_surface: UploadFile = File(..., description="舌面照片"),
-    tongue_bottom: UploadFile = File(None, description="舌底照片（可选）"),
+    tongue_bottom: UploadFile = File(..., description="舌底照片"),
     current_user: User = Depends(get_current_user),
     service: DiagnosisService = Depends(get_diagnosis_service)
 ):
@@ -55,17 +66,15 @@ async def diagnose_tongue(
     if tongue_surface.content_type not in allowed_types:
         return error_response(message="舌面照片仅支持 JPG、PNG 格式", code=400)
     
-    if tongue_bottom and tongue_bottom.content_type not in allowed_types:
+    if tongue_bottom.content_type not in allowed_types:
         return error_response(message="舌底照片仅支持 JPG、PNG 格式", code=400)
     
     try:
         tongue_surface_data = await tongue_surface.read()
         tongue_surface_base64 = base64.b64encode(tongue_surface_data).decode("utf-8")
         
-        tongue_bottom_base64 = None
-        if tongue_bottom:
-            tongue_bottom_data = await tongue_bottom.read()
-            tongue_bottom_base64 = base64.b64encode(tongue_bottom_data).decode("utf-8")
+        tongue_bottom_data = await tongue_bottom.read()
+        tongue_bottom_base64 = base64.b64encode(tongue_bottom_data).decode("utf-8")
         
         diagnosis = await service.diagnose(
             current_user.id, 
@@ -74,29 +83,77 @@ async def diagnose_tongue(
         )
         
         return success_response(
-            data=TongueDiagnosisResponse(
-                is_tongue=True,
-                signs=diagnosis.signs_list,
-                symptoms=diagnosis.symptoms_list,
-                score=diagnosis.score,
-                advice=diagnosis.advice_list
-            ),
+            data=_build_tongue_response(diagnosis),
             message="舌诊分析完成"
         )
     except ValueError as e:
         return success_response(
-            data=TongueDiagnosisResponse(
-                is_tongue=False,
-                signs=[],
-                symptoms=[],
-                score=0,
-                advice=[str(e)]
-            ),
+            data=_build_error_response(str(e)),
             message="舌诊分析完成"
         )
     except Exception as e:
         logger.error(f"Tongue diagnosis error: {e}", exc_info=True)
         return error_response(message="舌诊分析失败，请稍后重试", code=500)
+
+
+def _build_tongue_response(diagnosis) -> TongueDiagnosisResponse:
+    tongue_analysis = diagnosis.tongue_analysis_dict
+    health_score = diagnosis.health_score_dict
+    
+    return TongueDiagnosisResponse(
+        舌象分析=TongueAnalysis(
+            舌色=TongueFeature(**tongue_analysis.get("舌色", {"特征": "未识别", "描述": "", "主病": ""})),
+            舌形=TongueFeature(**tongue_analysis.get("舌形", {"特征": "未识别", "描述": "", "主病": ""})),
+            苔色=TongueFeature(**tongue_analysis.get("苔色", {"特征": "未识别", "描述": "", "主病": ""})),
+            苔质=[TongueCoatingFeature(**item) for item in tongue_analysis.get("苔质", [])],
+            舌下络脉=SublingualVein(**tongue_analysis.get("舌下络脉", {"特征": "未识别", "描述": "", "主病": ""}))
+        ),
+        健康评分=HealthScoreDetail(
+            舌色健康度=HealthScoreItem(**health_score.get("舌色健康度", {"得分": 0})),
+            舌形健康度=HealthScoreItem(**health_score.get("舌形健康度", {"得分": 0})),
+            苔色健康度=HealthScoreItem(**health_score.get("苔色健康度", {"得分": 0})),
+            苔质健康度=HealthScoreItem(**health_score.get("苔质健康度", {"得分": 0})),
+            舌下络脉健康度=HealthScoreItem(**health_score.get("舌下络脉健康度", {"得分": 0})),
+            综合体质评估=HealthScoreItem(**health_score.get("综合体质评估", {"得分": 0})),
+            总分=health_score.get("总分", 0),
+            健康等级=health_score.get("健康等级", "未识别"),
+            标签=health_score.get("标签", "")
+        ),
+        可能有以下的证型=diagnosis.syndromes_list,
+        体质分析=ConstitutionAnalysis(**diagnosis.constitution_dict),
+        调理建议=diagnosis.advice
+    )
+
+
+def _build_error_response(message: str) -> TongueDiagnosisResponse:
+    return TongueDiagnosisResponse(
+        舌象分析=TongueAnalysis(
+            舌色=TongueFeature(特征="未识别", 描述="", 主病=""),
+            舌形=TongueFeature(特征="未识别", 描述="", 主病=""),
+            苔色=TongueFeature(特征="未识别", 描述="", 主病=""),
+            苔质=[],
+            舌下络脉=SublingualVein(特征="未识别", 描述="", 主病="")
+        ),
+        健康评分=HealthScoreDetail(
+            舌色健康度=HealthScoreItem(得分=0),
+            舌形健康度=HealthScoreItem(得分=0),
+            苔色健康度=HealthScoreItem(得分=0),
+            苔质健康度=HealthScoreItem(得分=0),
+            舌下络脉健康度=HealthScoreItem(得分=0),
+            综合体质评估=HealthScoreItem(得分=0),
+            总分=0,
+            健康等级="未识别",
+            标签=""
+        ),
+        可能有以下的证型=[],
+        体质分析=ConstitutionAnalysis(
+            主体质="未识别",
+            副体质="",
+            总体特征="",
+            发病倾向=""
+        ),
+        调理建议=message
+    )
 
 
 @router.get("/history", response_model=ApiResponse[DiagnosisListResponse], summary="获取诊断历史")
@@ -111,11 +168,12 @@ async def get_diagnosis_history(
         DiagnosisResponse(
             id=d.id,
             user_id=d.user_id,
-            signs=d.signs_list,
-            symptoms=d.symptoms_list,
-            score=d.score,
-            created_at=d.created_at,
-            advice=d.advice_list
+            tongue_analysis=d.tongue_analysis_dict,
+            syndromes=d.syndromes_list,
+            constitution=d.constitution_dict,
+            health_score=d.health_score_dict,
+            advice=d.advice,
+            created_at=d.created_at
         )
         for d in diagnoses
     ]
@@ -144,11 +202,12 @@ async def get_diagnosis_detail(
         data=DiagnosisResponse(
             id=diagnosis.id,
             user_id=diagnosis.user_id,
-            signs=diagnosis.signs_list,
-            symptoms=diagnosis.symptoms_list,
-            score=diagnosis.score,
-            created_at=diagnosis.created_at,
-            advice=diagnosis.advice_list
+            tongue_analysis=diagnosis.tongue_analysis_dict,
+            syndromes=diagnosis.syndromes_list,
+            constitution=diagnosis.constitution_dict,
+            health_score=diagnosis.health_score_dict,
+            advice=diagnosis.advice,
+            created_at=diagnosis.created_at
         ),
         message="获取诊断详情成功"
     )

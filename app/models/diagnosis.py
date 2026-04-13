@@ -10,10 +10,11 @@ class Diagnosis(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
-    signs: Mapped[str] = mapped_column(Text, nullable=False)
-    symptoms: Mapped[str] = mapped_column(Text, nullable=False)
-    score: Mapped[int] = mapped_column(Integer, nullable=False)
-    advice: Mapped[str] = mapped_column(String(2000), nullable=False, default="[]")
+    tongue_analysis: Mapped[str] = mapped_column(Text, nullable=False)
+    syndromes: Mapped[str] = mapped_column(Text, nullable=False)
+    constitution: Mapped[str] = mapped_column(Text, nullable=False)
+    health_score: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+    advice: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     
     __table_args__ = (
@@ -22,34 +23,45 @@ class Diagnosis(Base):
     )
     
     @property
-    def signs_list(self) -> list[str]:
+    def tongue_analysis_dict(self) -> dict:
         try:
-            return json.loads(self.signs) if self.signs else []
+            return json.loads(self.tongue_analysis) if self.tongue_analysis else {}
         except json.JSONDecodeError:
-            return []
+            return {}
     
-    @signs_list.setter
-    def signs_list(self, value: list[str]):
-        self.signs = json.dumps(value, ensure_ascii=False)
+    @tongue_analysis_dict.setter
+    def tongue_analysis_dict(self, value: dict):
+        self.tongue_analysis = json.dumps(value, ensure_ascii=False)
     
     @property
-    def symptoms_list(self) -> list[str]:
+    def syndromes_list(self) -> list[str]:
         try:
-            return json.loads(self.symptoms) if self.symptoms else []
+            return json.loads(self.syndromes) if self.syndromes else []
         except json.JSONDecodeError:
             return []
     
-    @symptoms_list.setter
-    def symptoms_list(self, value: list[str]):
-        self.symptoms = json.dumps(value, ensure_ascii=False)
+    @syndromes_list.setter
+    def syndromes_list(self, value: list[str]):
+        self.syndromes = json.dumps(value, ensure_ascii=False)
     
     @property
-    def advice_list(self) -> list[str]:
+    def constitution_dict(self) -> dict:
         try:
-            return json.loads(self.advice) if self.advice else []
+            return json.loads(self.constitution) if self.constitution else {}
         except json.JSONDecodeError:
-            return []
+            return {}
     
-    @advice_list.setter
-    def advice_list(self, value: list[str]):
-        self.advice = json.dumps(value, ensure_ascii=False)
+    @constitution_dict.setter
+    def constitution_dict(self, value: dict):
+        self.constitution = json.dumps(value, ensure_ascii=False)
+    
+    @property
+    def health_score_dict(self) -> dict:
+        try:
+            return json.loads(self.health_score) if self.health_score else {}
+        except json.JSONDecodeError:
+            return {}
+    
+    @health_score_dict.setter
+    def health_score_dict(self, value: dict):
+        self.health_score = json.dumps(value, ensure_ascii=False)
