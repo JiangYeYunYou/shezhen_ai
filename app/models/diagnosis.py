@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from sqlalchemy import String, DateTime, Integer, Text, ForeignKey, Index
+from sqlalchemy.dialects.mysql import LONGBLOB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -15,6 +16,7 @@ class Diagnosis(Base):
     constitution: Mapped[str] = mapped_column(Text, nullable=False)
     health_score: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
     advice: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tongue_surface_image: Mapped[bytes] = mapped_column(LONGBLOB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     
     __table_args__ = (

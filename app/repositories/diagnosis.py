@@ -33,7 +33,8 @@ class DiagnosisRepository:
         syndromes: list[str],
         constitution: dict,
         health_score: dict,
-        advice: str = ""
+        advice: str = "",
+        tongue_surface_image: bytes = None
     ) -> Diagnosis:
         diagnosis = Diagnosis(
             user_id=user_id,
@@ -41,7 +42,8 @@ class DiagnosisRepository:
             syndromes=json.dumps(syndromes, ensure_ascii=False),
             constitution=json.dumps(constitution, ensure_ascii=False),
             health_score=json.dumps(health_score, ensure_ascii=False),
-            advice=advice
+            advice=advice,
+            tongue_surface_image=tongue_surface_image
         )
         self.session.add(diagnosis)
         await self.session.flush()
