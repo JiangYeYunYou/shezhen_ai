@@ -1,0 +1,105 @@
+# =============================================================================
+# Shezhen AI 后端服务 — Docker Compose 部署配置
+# =============================================================================
+# 使用方式：
+#   1. 复制 .env.example 为 .env 并填写实际配置
+#   2. docker compose up -d
+#   3. docker compose logs -f backend
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # MySQL 数据库服务
+  # ---------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: shezhen-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Shezhenapp&root163}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-shezhen_ai}
+      MYSQL_USER: ${MYSQL_USER:-shezhen}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shezhen_pass}
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Shezhenapp&root163}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - shezhen-network
+
+  # ---------------------------------------------------------------------------
+  # FastAPI 后端应用服务
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shezhen-backend
+    restart: unless-stopped
+    environment:
+      # 数据库配置（指向 MySQL 容器服务名）
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-shezhen}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-shezhen_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-shezhen_ai}
+      # JWT 配置（生产环境务必修改为强密钥）
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      # AI 配置
+      AI_BASE_URL: ${AI_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL_NAME: ${AI_MODEL_NAME:-deepseek-v3.2}
+      AI_VISION_BASE_URL: ${AI_VISION_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      AI_VISION_MODEL_NAME: ${AI_VISION_MODEL_NAME:-qwen-vl-plus}
+      # 日志级别
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # 环境标识
+      APP_ENV: production
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - shezhen-network
+
+# ---------------------------------------------------------------------------
+# 数据卷
+# ---------------------------------------------------------------------------
+volumes:
+  mysql_data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# 网络
+# ---------------------------------------------------------------------------
+networks:
+  shezhen-network:
+    driver: bridge

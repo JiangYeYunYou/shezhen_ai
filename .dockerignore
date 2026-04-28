@@ -1,0 +1,56 @@
+# Python 缓存与虚拟环境
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 运行时生成的文件（日志、本地 SQLite 等）
+logs/
+*.log
+shezhen.db
+*.db
+
+# 开发测试相关
+tests/
+test_*.py
+*_test.py
+.pytest_cache/
+
+# 设计文档（非运行时必须）
+plain/
+
+# trae / 本地工具
+.trae/
+
+# WorkBuddy / 本地工具
+.workbuddy/
+
+# 环境变量（生产密钥不应进入镜像）
+.env
+.env.local
+.env.production
+
+# Docker 自身文件
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore
+
+# 其他
+*.md
+!README.md
+.DS_Store
+Thumbs.db
