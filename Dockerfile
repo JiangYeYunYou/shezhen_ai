@@ -28,7 +28,7 @@ RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.aliyun.com/debian|g' 
     && rm -rf /var/lib/apt/lists/*
 
 # 先仅复制依赖锁定文件 → 利用 Docker 构建缓存，代码变更不触发重新安装依赖
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 
 # 使用 uv 同步依赖（--frozen 确保严格按 uv.lock 安装，--no-dev 排除开发包）
 RUN uv sync --frozen --no-dev
