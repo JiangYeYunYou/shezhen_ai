@@ -78,6 +78,10 @@ COPY prompts/ ./prompts/
 COPY migrations/ ./migrations/
 COPY alembic.ini ./
 
+# 复制入口脚本并赋予执行权限
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # 设置文件权限
 RUN chown -R shezhen:shezhen /app
 
@@ -94,16 +98,14 @@ EXPOSE 8000
 # =============================================================================
 # interval:  每 30 秒检查一次
 # timeout:   单次检查最多等待 5 秒
-# start-period: 容器启动后前 15 秒为缓冲期（应用启动需要时间）
+# start-period: 容器启动后前 20 秒为缓冲期（含数据库迁移时间）
 # retries:   连续失败 3 次后才判定为不健康
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://localhost:8000/health || exit 1
 
 # =============================================================================
 # 启动命令
 # =============================================================================
-# 生产环境使用 4 个 Uvicorn worker 进程处理并发请求
-# 如需在 K8s 中横向扩展，建议改为 --workers 1，通过副本数控制并发
-CMD ["uv", "run", "--no-sync", "uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", "--port", "8000", "--workers", "4", \
-     "--proxy-headers", "--forwarded-allow-ips", "*"]
+# 入口脚本负责：1. 运行 Alembic 迁移  2. 启动 Uvicorn
+# worker 数量可通过环境变量 UVICORN_WORKERS 覆盖（默认 4）
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

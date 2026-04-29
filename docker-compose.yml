@@ -69,6 +69,10 @@ services:
       AI_MODEL_NAME: ${AI_MODEL_NAME:-deepseek-v3.2}
       AI_VISION_BASE_URL: ${AI_VISION_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
       AI_VISION_MODEL_NAME: ${AI_VISION_MODEL_NAME:-qwen-vl-plus}
+      # Uvicorn 配置
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 8000
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
       # 日志级别
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       # 环境标识
