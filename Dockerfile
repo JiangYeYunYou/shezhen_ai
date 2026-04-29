@@ -1,21 +1,21 @@
 # syntax=docker/dockerfile:1
 
 # =============================================================================
-# 基础镜像选择
+# 基础镜像选择：官方 uv + Python 一体化镜像
 # =============================================================================
-# 使用官方 Python 3.13 Slim 镜像（基于 Debian Bookworm）
-# 优点：体积较小、安全补丁及时、Python 版本与项目要求一致（>=3.11）
-FROM python:3.13-slim-bookworm AS builder
+# ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+#   - Python 3.13（与项目要求 >=3.11 一致）
+#   - uv 已预装，无需 COPY --from
+#   - 基于 Debian Bookworm Slim，体积较小
+# =============================================================================
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 # =============================================================================
 # 构建阶段：安装依赖
 # =============================================================================
 WORKDIR /app
 
-# 安装 uv —— 项目使用的现代 Python 包管理器（固定版本保证可复现）
-COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
-
-# 安装系统级编译依赖（ Pillow 等含 C 扩展的包构建时需要）
+# 安装系统级编译依赖（Pillow 等含 C 扩展的包构建时需要）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libjpeg-dev \
@@ -32,12 +32,9 @@ RUN uv sync --frozen --no-dev
 # =============================================================================
 # 生产阶段：精简运行镜像
 # =============================================================================
-FROM python:3.13-slim-bookworm AS production
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS production
 
 WORKDIR /app
-
-# 安装 uv（生产阶段仍需 uv 来运行应用）
-COPY --from=ghcr.io/astral-sh/uv:0.6 /uv /uvx /bin/
 
 # 安装运行时系统依赖 + curl（健康检查用）
 # libjpeg62-turbo / libpng16-16：Pillow 运行时库
