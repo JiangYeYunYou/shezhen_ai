@@ -3,20 +3,24 @@
 # =============================================================================
 # 基础镜像选择：官方 uv + Python 一体化镜像
 # =============================================================================
-# ghcr.io/astral-sh/uv:python3.13-bookworm-slim
-#   - Python 3.13（与项目要求 >=3.11 一致）
-#   - uv 已预装，无需 COPY --from
-#   - 基于 Debian Bookworm Slim，体积较小
+# 镜像地址说明：
+#   - 官方源（海外服务器推荐）：ghcr.io/astral-sh/uv:python3.13-bookworm-slim
+#   - 国内加速源（国内服务器推荐）：ghcr.milu.moe/astral-sh/uv:python3.13-bookworm-slim
+#
+# 如果国内源不可用，可在服务器上配置 Docker daemon 镜像加速：
+#   /etc/docker/daemon.json 中添加 "registry-mirrors": ["https://ghcr.milu.moe"]
 # =============================================================================
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+FROM ghcr.milu.moe/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 # =============================================================================
 # 构建阶段：安装依赖
 # =============================================================================
 WORKDIR /app
 
-# 安装系统级编译依赖（Pillow 等含 C 扩展的包构建时需要）
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 更换 Debian 国内镜像源（阿里云），加速 apt 下载
+RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.aliyun.com/debian|g' /etc/apt/sources.list.d/debian.sources \
+    && sed -i 's|http://deb.debian.org/debian-security|https://mirrors.aliyun.com/debian-security|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libjpeg-dev \
     zlib1g-dev \
@@ -32,18 +36,18 @@ RUN uv sync --frozen --no-dev
 # =============================================================================
 # 生产阶段：精简运行镜像
 # =============================================================================
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS production
+FROM ghcr.milu.moe/astral-sh/uv:python3.13-bookworm-slim AS production
 
 WORKDIR /app
 
-# 安装运行时系统依赖 + curl（健康检查用）
-# libjpeg62-turbo / libpng16-16：Pillow 运行时库
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 更换 Debian 国内镜像源（阿里云），加速 apt 下载
+RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.aliyun.com/debian|g' /etc/apt/sources.list.d/debian.sources \
+    && sed -i 's|http://deb.debian.org/debian-security|https://mirrors.aliyun.com/debian-security|g' /etc/apt/sources.list.d/debian.sources \
+    && apt-get update && apt-get install -y --no-install-recommends \
     libjpeg62-turbo \
     libpng16-16 \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
 # 环境变量配置
