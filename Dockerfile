@@ -30,8 +30,10 @@ RUN sed -i 's|http://deb.debian.org/debian|https://mirrors.aliyun.com/debian|g' 
 # 先仅复制依赖锁定文件 → 利用 Docker 构建缓存，代码变更不触发重新安装依赖
 COPY pyproject.toml uv.lock README.md ./
 
-# 使用 uv 同步依赖（--frozen 确保严格按 uv.lock 安装，--no-dev 排除开发包）
-RUN uv sync --frozen --no-dev
+ENV UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+
+# 使用 uv 同步依赖（--no-install-project 跳过项目构建）
+RUN uv sync --no-install-project
 
 # =============================================================================
 # 生产阶段：精简运行镜像
@@ -59,7 +61,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     UV_NO_CACHE=1 \
-    APP_ENV=production
+    APP_ENV=production \
+    UV_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 
 # =============================================================================
 # 安全：非 root 用户运行
