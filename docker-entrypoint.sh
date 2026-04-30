@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # =============================================================================
 # Shezhen AI Backend — Docker Entrypoint
@@ -15,13 +14,24 @@ echo "========================================"
 
 # 运行数据库迁移
 echo "[1/2] 正在执行数据库迁移..."
-if uv run alembic upgrade head; then
+
+# 尝试执行迁移
+MIGRATION_OUTPUT=$(uv run alembic upgrade head 2>&1)
+MIGRATION_EXIT_CODE=$?
+
+if [ $MIGRATION_EXIT_CODE -eq 0 ]; then
     echo "[1/2] 数据库迁移完成 ✅"
 else
-    # 迁移失败，尝试标记版本（表可能已存在）
-    echo "[1/2] 检测到数据库表已存在，标记 Alembic 版本..."
-    uv run alembic stamp head || true
-    echo "[1/2] 数据库初始化完成 ✅"
+    # 检查是否是表已存在的错误
+    if echo "$MIGRATION_OUTPUT" | grep -q "already exists"; then
+        echo "[1/2] 检测到数据库表已存在，标记 Alembic 版本..."
+        uv run alembic stamp head
+        echo "[1/2] 数据库初始化完成 ✅"
+    else
+        echo "[1/2] 数据库迁移失败 ❌"
+        echo "$MIGRATION_OUTPUT"
+        exit 1
+    fi
 fi
 
 # 启动应用

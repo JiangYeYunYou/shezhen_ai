@@ -17,6 +17,7 @@ dependencies = [
     "zhDateTime>=1.0.0",
     "Pillow>=10.0.0",
     "uvicorn[standard]>=0.44.0",
+    "alembic>=1.12.0",
 ]
 
 [project.optional-dependencies]
@@ -24,7 +25,6 @@ dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
     "httpx>=0.24.0",
-    "alembic>=1.12.0",
     "pymysql>=1.1.0",
 ]
 
